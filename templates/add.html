@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Pitch Pattern</title>
+</head>
+<body>
+
+  <h1>Add New Pitch Pattern</h1>
+
+  <form action="{{ url_for('add') }}" method="POST">
+    Name: <input type="text" name="name" required><br>
+    Parity (number): <input type="number" name="parity" min="1" required><br>
+    <button type="submit">Add</button>
+  </form>
+
+  <br>
+  <a href="{{ url_for('index') }}">Back to Home</a>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Pitch Pattern</title>
+</head>
+<body>
+
+  <h1>Edit Pitch Pattern</h1>
+
+  <form action="{{ url_for('edit', id=pattern[0]) }}" method="POST">
+    Name: <input type="text" name="name" value="{{ pattern[1] }}" required><br>
+    Parity: <input type="number" name="parity" value="{{ pattern[2] }}" required><br>
+    <button type="submit">Update</button>
+  </form>
+
+  <br>
+  <a href="{{ url_for('index') }}">Back to Home</a>
+
+</body>
+</html>

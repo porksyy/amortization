@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pitch Pattern System</title>
+</head>
+<body>
+
+  <h1>Pitch Patterns</h1>
+
+  <!-- Search Form -->
+  <form action="{{ url_for('search') }}" method="POST">
+    <input type="text" name="query" placeholder="Search by name..." required>
+    <button type="submit">Search</button>
+    <a href="{{ url_for('index') }}">Reset</a>
+  </form>
+
+  <br>
+
+  <!-- Link to Add Form -->
+  <a href="{{ url_for('add') }}">Add New Pitch Pattern</a>
+
+  <hr>
+
+  <!-- List of pitch patterns -->
+  <ul>
+    {% for pattern in patterns %}
+      <li>
+        {{ pattern[1] }} (Parity: {{ pattern[2] }})
+        <!-- Edit Button -->
+        <a href="{{ url_for('edit', id=pattern[0]) }}">Edit</a>
+
+        <!-- Delete Button -->
+        <form action="{{ url_for('delete', id=pattern[0]) }}" method="POST" style="display:inline;">
+            <button type="submit" onclick="return confirm('Are you sure you want to delete this pattern?');">Delete</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <hr>
+
+  <!-- Translate Form -->
+  <h2>Translate Word</h2>
+  <form action="{{ url_for('translate') }}" method="POST">
+    Word to translate (uppercase only): <input type="text" name="word" required><br>
+    Select pitch pattern:
+    <select name="pattern_id" required>
+      {% for pattern in patterns %}
+        <option value="{{ pattern[0] }}">{{ pattern[1] }} (Parity: {{ pattern[2] }})</option>
+      {% endfor %}
+    </select><br>
+    <button type="submit">Translate</button>
+  </form>
+
+  <!-- Translated Result -->
+  {% if translated_word %}
+    <p><strong>Translated Word:</strong> {{ translated_word }}</p>
+  {% endif %}
+
+</body>
+</html>
