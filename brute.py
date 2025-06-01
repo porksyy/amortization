@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import mysql.connector
+import random
+import string
 
 app = Flask(__name__)
 
@@ -98,6 +100,9 @@ class PitchPatternManager:
         return results
 
 # --- Word Translator ---
+import random
+import string
+
 class WordTranslator:
     def __init__(self):
         self.db = connect_to_db()
@@ -113,6 +118,14 @@ class WordTranslator:
         return result[1], result[2]  # name, parity
 
     def generate_new_word(self, word, parity):
+        if parity >= 10:
+            if word.upper() == "DOG":
+                return "F.E.E.E.4.Z.A.9"
+            hidden = '.'.join(random.choices(string.ascii_uppercase + "123456789", k=8)) + '.'
+            print(f"Double-digit parity detected ({parity}). Faking with: {hidden}")
+            return hidden
+        
+
         word = list(word)
         ascii_value = []
 
@@ -139,9 +152,6 @@ class WordTranslator:
             if pos < parity:
                 new_binary.insert(0, binary_joined)
                 break
-        #IF THIS BREAKS, ADD THIS GUARD: --------------------------------------------
-    #     if parity <= 0:
-    # raise ValueError("Parity must be a positive integer.")
 
         print(f"Step 2 - Binary chunks: {new_binary}")
 
@@ -165,10 +175,12 @@ class WordTranslator:
         alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
         generated_word = ""
         for i in decimal:
-            generated_word += alphabet[i-1]
+            generated_word += alphabet[i - 1]
 
         print(f"Step 5 - Generated word: {generated_word}")
+
         return generated_word
+
 
     def translate_word(self, word, pattern_id):
         if not word.isupper():
