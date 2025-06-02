@@ -24,40 +24,27 @@ class PitchPatternManager:
         self.db.commit()
         cursor.close()
 
+    
+    #IN CASE OF ERROR IN EDIT PITCH: --------------------------------------------------
     def edit_pitch_pattern(self, pattern_id, name=None, parity=None):
         cursor = self.db.cursor()
         updates = []
-        if name:
-            updates.append(f"pitch_pattern_name='{name}'")
-        if parity:
-            updates.append(f"pitch_pattern_parity={parity}")
+        params = []
+
+        if name is not None:
+            updates.append("pitch_pattern_name = %s")
+            params.append(name)
+        if parity is not None:
+            updates.append("pitch_pattern_parity = %s")
+            params.append(parity)
+
         if updates:
-            query = f"UPDATE pitch_patterns SET {', '.join(updates)} WHERE pitch_pattern_id={pattern_id}"
-            cursor.execute(query)
-            # TRY cursor.execute(query)
+            query = f"UPDATE pitch_patterns SET {', '.join(updates)} WHERE pitch_pattern_id = %s"
+            params.append(pattern_id)
+            cursor.execute(query, tuple(params))
             self.db.commit()
+
         cursor.close()
-    
-    #IN CASE OF ERROR IN EDIT PITCH: --------------------------------------------------
-    # def edit_pitch_pattern(self, pattern_id, name=None, parity=None):
-    # cursor = self.db.cursor()
-    # updates = []
-    # params = []
-
-    # if name is not None:
-    #     updates.append("pitch_pattern_name = %s")
-    #     params.append(name)
-    # if parity is not None:
-    #     updates.append("pitch_pattern_parity = %s")
-    #     params.append(parity)
-
-    # if updates:
-    #     query = f"UPDATE pitch_patterns SET {', '.join(updates)} WHERE pitch_pattern_id = %s"
-    #     params.append(pattern_id)
-    #     cursor.execute(query, tuple(params))
-    #     self.db.commit()
-
-    # cursor.close()
     
 
     def delete_pitch_pattern(self, pattern_id):

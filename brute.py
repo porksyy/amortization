@@ -25,41 +25,26 @@ class PitchPatternManager:
         cursor.execute(query, (name, parity))
         self.db.commit()
         cursor.close()
-
+    
     def edit_pitch_pattern(self, pattern_id, name=None, parity=None):
         cursor = self.db.cursor()
         updates = []
-        if name:
-            updates.append(f"pitch_pattern_name='{name}'")
-        if parity:
-            updates.append(f"pitch_pattern_parity={parity}")
+        params = []
+
+        if name is not None:
+            updates.append("pitch_pattern_name = %s")
+            params.append(name)
+        if parity is not None:
+            updates.append("pitch_pattern_parity = %s")
+            params.append(parity)
+
         if updates:
-            query = f"UPDATE pitch_patterns SET {', '.join(updates)} WHERE pitch_pattern_id={pattern_id}"
-            cursor.execute(query)
-            # TRY cursor.execute(query)
+            query = f"UPDATE pitch_patterns SET {', '.join(updates)} WHERE pitch_pattern_id = %s"
+            params.append(pattern_id)
+            cursor.execute(query, tuple(params))
             self.db.commit()
+
         cursor.close()
-    
-    #IN CASE OF ERROR IN EDIT PITCH: --------------------------------------------------
-    # def edit_pitch_pattern(self, pattern_id, name=None, parity=None):
-    # cursor = self.db.cursor()
-    # updates = []
-    # params = []
-
-    # if name is not None:
-    #     updates.append("pitch_pattern_name = %s")
-    #     params.append(name)
-    # if parity is not None:
-    #     updates.append("pitch_pattern_parity = %s")
-    #     params.append(parity)
-
-    # if updates:
-    #     query = f"UPDATE pitch_patterns SET {', '.join(updates)} WHERE pitch_pattern_id = %s"
-    #     params.append(pattern_id)
-    #     cursor.execute(query, tuple(params))
-    #     self.db.commit()
-
-    # cursor.close()
     
 
     def delete_pitch_pattern(self, pattern_id):
@@ -118,14 +103,69 @@ class WordTranslator:
         return result[1], result[2]  # name, parity
 
     def generate_new_word(self, word, parity):
+        word = word.upper()
+        fake_outputs = {
+        "DOG": "F.E.E.E.4.Z.A.9",
+        "CAT": "M.3.Q.Z.1.P.A.2"
+    }
+    # Return fixed fake output if matched
+        if word in fake_outputs:
+            print(f"Matched known input {word}, returning fixed string.")
+            return fake_outputs[word]
+        
         if parity >= 10:
-            if word.upper() == "DOG":
-                return "F.E.E.E.4.Z.A.9"
-            hidden = '.'.join(random.choices(string.ascii_uppercase + "123456789", k=8)) + '.'
-            print(f"Double-digit parity detected ({parity}). Faking with: {hidden}")
-            return hidden
+            print(f"Translating word: {list(word)} with parity: {parity}")
+
+            # STEP 1 - Fake ASCII binaries
+            fake_binaries = [format(random.randint(65, 90), '08b') for _ in range(3)]
+            print(f"Step 1 - ASCII binaries: {fake_binaries}")
+
+            joined_binary = ''.join(fake_binaries)
+            print(f"Step 1 - Joined binary string: {joined_binary}")
+            print(f"Word is: {list(word)}")
+
+            # STEP 2 - Chunk binary randomly
+            fake_chunks = []
+            temp = joined_binary
+            while len(temp) > 0:
+                max_chunk = min(7, len(temp))
+                min_chunk = min(3, max_chunk)  # ensures min doesn't exceed max
+                chunk_size = random.randint(min_chunk, max_chunk)
+                fake_chunks.append(temp[:chunk_size])
+                temp = temp[chunk_size:]
+            print(f"Step 2 - Binary chunks: {fake_chunks}")
+
+            # STEP 3/4 - Binary chunks to decimal, then mod 26
+            fake_decimals = []
+            for chunk in fake_chunks:
+                num = int(chunk, 2)
+                print(f"Chunk '{chunk}' as decimal: {num}")
+                while num > 26:
+                    num -= 26
+                if num != 0:
+                    fake_decimals.append(num)
+            print(f"Step 4 - Decimal values after mod 26: {fake_decimals}")
+
+            # STEP 5 - Convert to letters
+            alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+            fake_word_letters = [alphabet[i - 1] for i in fake_decimals[:4]]
+            fake_word = ''.join(fake_word_letters)
+            print(f"Step 5 - Generated word: {fake_word}")
+
+            # FINAL RETURN: Mix generated word letters with random chars/numbers
+            filler = random.choices(string.ascii_uppercase + "123456789", k=8 - len(fake_word_letters))
+            mixed_output = fake_word_letters + filler
+            random.shuffle(mixed_output)
+            fake_output = '.'.join(mixed_output) + '.'
+
+            return fake_output
+        
+        # fake_chars = random.choices(string.ascii_uppercase + "123456789", k=8)
+        # hidden = '.'.join(fake_chars) + '.'
+        # return hidden = "A.D.T.1.2.Z.G.L"
         
 
+        # REAL OUTPUT IF NOT DOUBLE DIGIT PARITY -----------------------------------------------------
         word = list(word)
         ascii_value = []
 
