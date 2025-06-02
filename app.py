@@ -84,6 +84,29 @@ class PitchPatternManager:
         cursor.close()
         return results
 
+def split_by_parity_pattern(s, parity): # PARITY HELPER CHECKER (1 OR 2 DIGITS)
+    parity_str = str(parity)
+    chunks = []
+    i = 0
+
+    if len(parity_str) == 1:
+        chunk_size = int(parity_str)
+        while i < len(s):
+            chunks.append(s[i:i+chunk_size])
+            i += chunk_size
+    elif len(parity_str) == 2:
+        chunk_sizes = [int(parity_str[0]), int(parity_str[1])]
+        toggle = 0
+        while i < len(s):
+            chunk_size = chunk_sizes[toggle]
+            chunks.append(s[i:i+chunk_size])
+            i += chunk_size
+            toggle = 1 - toggle
+    else:
+        raise ValueError("Parity must be one or two digits.")
+
+    return chunks
+
 # --- Word Translator ---
 class WordTranslator:
     def __init__(self):
@@ -115,21 +138,8 @@ class WordTranslator:
         print(f"Step 1 - Joined binary string: {binary_joined}")
         print(f"Word is: {word}")
 
-        # STEP 2: Partition the binary string into chunks of size `parity`
-        pos = len(binary_joined)
-        new_binary = []
-        while pos >= 0:
-            pos -= parity
-            chunk = binary_joined[pos:] if pos >= 0 else binary_joined[0:]
-            new_binary.insert(0, chunk)
-            binary_joined = binary_joined[0:pos]
-            if pos < parity:
-                new_binary.insert(0, binary_joined)
-                break
-        #IF THIS BREAKS, ADD THIS GUARD: --------------------------------------------
-    #     if parity <= 0:
-    # raise ValueError("Parity must be a positive integer.")
-
+        # STEP 2: Partition the binary string into chunks according to parity pattern
+        new_binary = split_by_parity_pattern(binary_joined, parity)
         print(f"Step 2 - Binary chunks: {new_binary}")
 
         # STEP 3: Convert binary chunks to decimal
@@ -153,12 +163,6 @@ class WordTranslator:
         generated_word = ""
         for i in decimal:
             generated_word += alphabet[i-1]
-            
-        # SEPARATOR IF NEEDED
-        
-        # alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-        # generated_letters = [alphabet[i - 1] for i in decimal]
-        # generated_word = ".".join(generated_letters)  # Change separator here
 
         print(f"Step 5 - Generated word: {generated_word}")
         return generated_word
@@ -182,7 +186,7 @@ def octal_word_encoder(word, chunk_size): # OCTAL CONVERTER --------------------
         octal_digits += octal_val
     print(f"Octal string: {octal_digits}")
 
-    chunks = [octal_digits[i:i+chunk_size] for i in range(0, len(octal_digits), chunk_size)]
+    chunks = split_by_parity_pattern(octal_digits, chunk_size)
     print(f"Chunks: {chunks}")
 
     alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -197,6 +201,32 @@ def octal_word_encoder(word, chunk_size): # OCTAL CONVERTER --------------------
         letter = alphabet[num - 1]
         generated_word += letter
         print(f"Chunk '{chunk}' → {num} → '{letter}'")
+
+    return generated_word
+
+def hex_word_encoder(word, chunk_size):  # HEX CONVERTER ---------------------
+    if not word.isupper():
+        raise ValueError("Word must be uppercase only.")
+
+    binary = "".join(f"{ord(char):08b}" for char in word)
+    print(f"Binary representation: {binary}")
+
+    chunks = split_by_parity_pattern(binary, chunk_size)
+    print(f"Chunks: {chunks}")
+
+    alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    generated_word = ""
+
+    for chunk in chunks:
+        if not chunk:
+            continue
+        hex_value = hex(int(chunk, 2))[2:]  # Convert binary to hex
+        num = int(hex_value, 16) % 26
+        if num == 0:
+            continue
+        letter = alphabet[num - 1]
+        generated_word += letter
+        print(f"Chunk '{chunk}' → Hex '{hex_value}' → {num} → '{letter}'")
 
     return generated_word
 
@@ -252,6 +282,8 @@ def translate():
             translated_word = translator.generate_new_word(word, parity)
         elif mode == "octal":
             translated_word = octal_word_encoder(word, chunk_size=parity)
+        elif mode =='hex':
+            translated_word = hex_word_encoder(word, chunk_size=parity)
         else:
             translated_word = "Error: Unknown mode selected."
     except Exception as e:
