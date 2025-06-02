@@ -153,9 +153,16 @@ class WordTranslator:
         generated_word = ""
         for i in decimal:
             generated_word += alphabet[i-1]
+            
+        # SEPARATOR IF NEEDED
+        
+        # alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        # generated_letters = [alphabet[i - 1] for i in decimal]
+        # generated_word = ".".join(generated_letters)  # Change separator here
 
         print(f"Step 5 - Generated word: {generated_word}")
         return generated_word
+
 
     def translate_word(self, word, pattern_id):
         if not word.isupper():
