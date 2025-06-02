@@ -1,0 +1,57 @@
+# OCTAL --------------------------------------------------
+def octal_word_encoder(word, chunk_size):
+    if not word.isupper():
+        raise ValueError("Word must be uppercase only.")
+    
+    octal_digits = ""
+    for char in word:
+        ascii_val = ord(char)
+        octal_val = oct(ascii_val)[2:]  # e.g., '110' for H
+        octal_digits += octal_val
+
+    chunks = [octal_digits[i:i+chunk_size] for i in range(0, len(octal_digits), chunk_size)]
+
+    alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    generated_word = ""
+    for chunk in chunks:
+        if not chunk:
+            continue
+        num = int(chunk, 10)
+        num = num % 26
+        if num == 0:
+            continue
+        letter = alphabet[num - 1]
+        generated_word += letter
+
+    return generated_word
+
+# ADD IN INDEX ----------------------------------
+<select name="mode">
+    <option value="binary">Binary (default)</option>
+    <option value="octal">Octal (experimental)</option>
+  </select>
+
+# UPDATED TRANSLATE ROUTE ---------------------------------
+@app.route('/translate', methods=['POST'])
+def translate():
+    word = request.form['word'].strip().upper()
+    pattern_id = int(request.form['pattern_id'])
+    mode = request.form.get('mode', 'binary')  # default to binary
+
+    manager = PitchPatternManager()
+    patterns = manager.get_all_patterns()
+
+    try:
+        name, parity = WordTranslator().fetch_pitch_pattern(pattern_id)
+
+        if mode == "binary":
+            translator = WordTranslator()
+            translated_word = translator.generate_new_word(word, parity)
+        elif mode == "octal":
+            translated_word = octal_word_encoder(word, chunk_size=parity)
+        else:
+            translated_word = "Error: Unknown mode selected."
+    except Exception as e:
+        translated_word = f"Error: {str(e)}"
+
+    return render_template("index.html", patterns=patterns, translated_word=translated_word)

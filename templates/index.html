@@ -112,6 +112,10 @@
         <option value="{{ pattern[0] }}">{{ pattern[1] }} (Parity: {{ pattern[2] }})</option>
       {% endfor %}
     </select><br>
+    <select name="mode">
+      <option value="binary">Binary (default)</option>
+      <option value="octal">Octal (experimental)</option>
+    </select>
     <button type="submit">Translate</button>
   </form>
 

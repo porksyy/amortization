@@ -169,6 +169,36 @@ class WordTranslator:
             raise ValueError("Word must be uppercase only.")
         _, parity = self.fetch_pitch_pattern(pattern_id)
         return self.generate_new_word(word, parity)
+    
+    
+def octal_word_encoder(word, chunk_size): # OCTAL CONVERTER ---------------------
+    if not word.isupper():
+        raise ValueError("Word must be uppercase only.")
+    
+    octal_digits = ""
+    for char in word:
+        ascii_val = ord(char)
+        octal_val = oct(ascii_val)[2:]  # e.g., '110' for H
+        octal_digits += octal_val
+    print(f"Octal string: {octal_digits}")
+
+    chunks = [octal_digits[i:i+chunk_size] for i in range(0, len(octal_digits), chunk_size)]
+    print(f"Chunks: {chunks}")
+
+    alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    generated_word = ""
+    for chunk in chunks:
+        if not chunk:
+            continue
+        num = int(chunk, 10)
+        num = num % 26
+        if num == 0:
+            continue
+        letter = alphabet[num - 1]
+        generated_word += letter
+        print(f"Chunk '{chunk}' → {num} → '{letter}'")
+
+    return generated_word
 
 # --- Routes ---
 
@@ -209,17 +239,27 @@ def delete(id):
 def translate():
     word = request.form['word'].strip().upper()
     pattern_id = int(request.form['pattern_id'])
+    mode = request.form.get('mode', 'binary')  # default to binary
 
     manager = PitchPatternManager()
     patterns = manager.get_all_patterns()
 
     try:
-        translator = WordTranslator()
-        translated_word = translator.translate_word(word, pattern_id)
+        name, parity = WordTranslator().fetch_pitch_pattern(pattern_id) # fetch parity and pass
+
+        if mode == "binary":
+            translator = WordTranslator()
+            translated_word = translator.generate_new_word(word, parity)
+        elif mode == "octal":
+            translated_word = octal_word_encoder(word, chunk_size=parity)
+        else:
+            translated_word = "Error: Unknown mode selected."
     except Exception as e:
         translated_word = f"Error: {str(e)}"
 
     return render_template("index.html", patterns=patterns, translated_word=translated_word)
+
+
 
 @app.route('/search', methods=['POST'])
 def search():
